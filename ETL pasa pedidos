@@ -6,7 +6,8 @@ FROM	prd.EKKO AS E INNER JOIN
 			SELECT	MANDT, EBELN, SUM(MENGE) AS Pares, AVG(NETPR) AS Costo, SUM(NETWR) AS Pesos, count(*) as pedidos,SUM(CASE WHEN ELIKZ = 'X' THEN 1 ELSE 0 END) AS Entregado
             FROM            prd.EKPO WITH (NOLOCK)
             WHERE        (LEN(MATNR) = 9)
-            AND left(MATNR,1)='D' AND BUKRS in ('VMEX','CODZ')         
+			AND left(MATNR,1)='D' AND BUKRS in ('VMEX','CODZ') 
+            
 GROUP BY MANDT, EBELN
 
 		) AS P ON E.MANDT = P.MANDT AND E.EBELN = P.EBELN LEFT JOIN
@@ -15,8 +16,8 @@ GROUP BY MANDT, EBELN
 			FROM	prd.EKET
 			GROUP BY MANDT, EBELN
 		) AS FE ON FE.MANDT = E.MANDT AND FE.EBELN = E.EBELN
-WHERE   (E.BSTYP = 'F') AND (E.BSART IN ('NB', 'ZINI', 'ZIMP', 'ZRES')) AND (E.MANDT = '400')  
-        AND E.BUKRS in ('VMEX','CODZ') 
+ WHERE   (E.BSTYP = 'F') AND (E.BSART IN ('NB', 'ZINI', 'ZIMP', 'ZRES', 'ZNB')) AND (E.MANDT = '400')  
+         AND E.BUKRS in ('VMEX','CODZ') 
 
 AND
 		EXISTS (
