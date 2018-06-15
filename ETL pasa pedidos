@@ -1,0 +1,26 @@
+-- pedido ETL
+SELECT	E.EBELN AS Num_pedido, CAST(E.BEDAT AS DATE) AS Fecha_pedido, FE.EIDNT AS Fecha_entrega, RIGHT(E.LIFNR, 4) AS Num_prov, P.Pares, 
+		P.Costo, P.Pesos, CASE WHEN P.Entregado-P.pedidos = 0 THEN 3 ELSE 0 END AS status
+FROM	prd.EKKO AS E INNER JOIN
+		(
+			SELECT	MANDT, EBELN, SUM(MENGE) AS Pares, AVG(NETPR) AS Costo, SUM(NETWR) AS Pesos, count(*) as pedidos,SUM(CASE WHEN ELIKZ = 'X' THEN 1 ELSE 0 END) AS Entregado
+            FROM            prd.EKPO WITH (NOLOCK)
+            WHERE        (LEN(MATNR) = 9)
+            AND left(MATNR,1)='D' AND BUKRS in ('VMEX','CODZ')         
+GROUP BY MANDT, EBELN
+
+		) AS P ON E.MANDT = P.MANDT AND E.EBELN = P.EBELN LEFT JOIN
+		(	
+			SELECT	MANDT, EBELN, MAX(CAST(EINDT AS DATE)) AS EIDNT
+			FROM	prd.EKET
+			GROUP BY MANDT, EBELN
+		) AS FE ON FE.MANDT = E.MANDT AND FE.EBELN = E.EBELN
+WHERE   (E.BSTYP = 'F') AND (E.BSART IN ('NB', 'ZINI', 'ZIMP', 'ZRES')) AND (E.MANDT = '400')  
+        AND E.BUKRS in ('VMEX','CODZ') 
+
+AND
+		EXISTS (
+			SELECT	*
+            FROM	prd.CDHDR AS CD
+			WHERE   (UDATE >= DATEADD([day], -97, GETDATE())) AND E.EBELN = OBJECTID
+		)
